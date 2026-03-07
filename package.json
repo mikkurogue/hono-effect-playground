@@ -1,0 +1,31 @@
+{
+  "name": "my-api",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:check": "drizzle-kit check"
+  },
+  "dependencies": {
+    "@effect/sql-pg": "^0.50.3",
+    "@hono/zod-openapi": "^1.2.2",
+    "@hono/zod-validator": "^0.7.6",
+    "@scalar/hono-api-reference": "^0.10.3",
+    "better-result": "^2.7.0",
+    "dotenv": "^17.3.1",
+    "drizzle-orm": "^1.0.0-beta.17-67b1795",
+    "effect": "^3.19.19",
+    "evlog": "^2.5.0",
+    "hono": "^4.12.7",
+    "pg": "^8.20.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/pg": "^8.18.0",
+    "drizzle-kit": "^1.0.0-beta.17-67b1795",
+    "tsx": "^4.21.0"
+  }
+}
