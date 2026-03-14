@@ -1,11 +1,19 @@
-import { pgTable, serial, text, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, uuid, varchar } from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("users", {
-	id: serial("id").primaryKey(),
+	id: uuid("id").primaryKey().defaultRandom(),
 	username: varchar("username", { length: 64 }).notNull().unique(),
 	email: varchar("email", { length: 255 }).notNull().unique(),
 	password: text("password").notNull(),
 });
 
 export type User = typeof usersTable.$inferSelect;
-export type NewUser = typeof usersTable.$inferInsert;
+
+export const repositoriesTable = pgTable("repositories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 255 }).notNull(),
+  owner: uuid("owner").notNull().references(() => usersTable.id),
+});
+
+export type Repository = typeof repositoriesTable.$inferSelect;
+

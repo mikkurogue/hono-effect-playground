@@ -1,11 +1,17 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "fc972f79-456c-47ec-bfd6-049b3fd6a6fe",
+  "id": "69e91897-5637-4968-bc64-5aec2b53942e",
   "prevIds": [
     "00000000-0000-0000-0000-000000000000"
   ],
   "ddl": [
+    {
+      "isRlsEnabled": false,
+      "name": "repositories",
+      "entityType": "tables",
+      "schema": "public"
+    },
     {
       "isRlsEnabled": false,
       "name": "users",
@@ -13,11 +19,50 @@
       "schema": "public"
     },
     {
-      "type": "serial",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "repositories"
+    },
+    {
+      "type": "varchar(255)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "repositories"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "owner",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "repositories"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
       "name": "id",
@@ -63,6 +108,33 @@
       "entityType": "columns",
       "schema": "public",
       "table": "users"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "owner"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "repositories_owner_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "repositories"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "repositories_pkey",
+      "schema": "public",
+      "table": "repositories",
+      "entityType": "pks"
     },
     {
       "columns": [

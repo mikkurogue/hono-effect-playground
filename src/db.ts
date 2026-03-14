@@ -1,10 +1,10 @@
 import "dotenv/config";
 import { PgClient } from "@effect/sql-pg";
 import * as PgDrizzle from "drizzle-orm/effect-postgres";
+import { Context } from "effect";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
-import { Context } from "effect";
 import { types } from "pg";
 
 const PgClientLive = PgClient.layer({

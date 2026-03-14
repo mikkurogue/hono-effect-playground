@@ -1,5 +1,4 @@
 import { eq, inArray } from "drizzle-orm";
-import { EffectDrizzleQueryError } from "drizzle-orm/effect-core";
 import * as Effect from "effect/Effect";
 import * as z from "zod";
 import { Db } from "../db";
@@ -13,7 +12,7 @@ import {
 } from "./errors";
 
 export const userSchema = z.object({
-	id: z.number(),
+	id: z.uuid(),
 	username: z.string().min(3),
 	email: z.email(),
 	password: z.string().min(6),
@@ -22,7 +21,7 @@ export const userSchema = z.object({
 export const createUserSchema = userSchema.omit({ id: true });
 export const userResponseSchema = userSchema.omit({ password: true });
 export const bulkDeleteUsersSchema = z.object({
-	ids: z.array(z.number().int().positive()).min(1),
+	ids: z.array(z.uuid()),
 });
 
 export type User = z.infer<typeof userSchema>;
@@ -82,7 +81,7 @@ export function createUser(user: CreateUserInput) {
 	);
 }
 
-export function getUserById(id: number) {
+export function getUserById(id: string) {
 	return Effect.gen(function* () {
 		const db = yield* Db;
 
@@ -111,7 +110,7 @@ export function getUserById(id: number) {
 	);
 }
 
-export function deleteUserById(id: number) {
+export function deleteUserById(id: string) {
 	return Effect.gen(function* () {
 		const db = yield* Db;
 
@@ -131,7 +130,7 @@ export function deleteUserById(id: number) {
 	);
 }
 
-export function bulkDeleteUsers(ids: number[]) {
+export function bulkDeleteUsers(ids: string[]) {
 	return Effect.gen(function* () {
 		const db = yield* Db;
 

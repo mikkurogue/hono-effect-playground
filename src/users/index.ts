@@ -10,6 +10,7 @@ import {
 	createUser,
 	createUserSchema,
 	deleteUserById,
+	getUserById,
 	getUsers,
 } from "./service";
 
@@ -50,6 +51,56 @@ users.get("/", async (ctx) => {
 
 	return ctx.json(users.value);
 });
+
+users.get(
+	"/:id",
+	zValidator("param", z.object({ id: z.string().uuid() })),
+	async (ctx) => {
+		const log = ctx.get("log");
+		log.set({ route: "/users/:id" });
+
+		const { id } = ctx.req.valid("param");
+
+		const user = await Effect.runPromise(
+			getUserById(id).pipe(
+				Effect.provide(DbLive),
+				Effect.map((value) => ({ ok: true as const, value })),
+				Effect.catchTags({
+					UserNotFoundError: () => {
+						log.error(`User with id ${id} not found`);
+						return Effect.succeed({
+							ok: false as const,
+							status: 404 as const,
+							error: "User not found",
+						});
+					},
+					UserValidationError: (error) => {
+						log.error(`User response validation failed: ${error.message}`);
+						return Effect.succeed({
+							ok: false as const,
+							status: 500 as const,
+							error: "Invalid user data in database",
+						});
+					},
+					UserDatabaseError: (error) => {
+						log.error(`Database error while fetching user: ${error.message}`);
+						return Effect.succeed({
+							ok: false as const,
+							status: 500 as const,
+							error: "Database error",
+						});
+					},
+				}),
+			),
+		);
+
+		if (!user.ok) {
+			return ctx.json({ error: user.error }, user.status);
+		}
+
+		return ctx.json(user.value);
+	},
+);
 
 users.post("/", zValidator("json", createUserSchema), async (ctx) => {
 	const log = ctx.get("log");
