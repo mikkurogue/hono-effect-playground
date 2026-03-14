@@ -1,4 +1,4 @@
-import { zValidator } from "@hono/zod-validator";
+import { zValidator } from "../lib/z-param-validator";
 import * as Effect from "effect/Effect";
 import type { EvlogVariables } from "evlog/hono";
 import { Hono } from "hono";
@@ -54,7 +54,7 @@ users.get("/", async (ctx) => {
 
 users.get(
 	"/:id",
-	zValidator("param", z.object({ id: z.string().uuid() })),
+	zValidator("param", z.object({ id: z.uuid() })),
 	async (ctx) => {
 		const log = ctx.get("log");
 		log.set({ route: "/users/:id" });
@@ -179,7 +179,7 @@ users.delete(
 
 users.delete(
 	"/:id",
-	zValidator("param", z.object({ id: z.coerce.number().int().positive() })),
+	zValidator("param", z.object({ id: z.uuid() })),
 	async (ctx) => {
 		const log = ctx.get("log");
 		log.set({ route: "/users/:id", method: "DELETE" });
