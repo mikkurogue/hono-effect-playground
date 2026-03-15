@@ -1,6 +1,9 @@
 import { initLogger } from "evlog";
-import { type EvlogVariables, evlog } from "evlog/hono";
-import { Hono } from "hono";
+import { evlog } from "evlog/hono";
+import { Effect, Layer } from "effect";
+import { HonoApp } from "./lib/hono-app";
+import { RouteBuilder } from "./lib/route-builder";
+import { repositories } from "./repositories";
 import { users } from "./users";
 
 initLogger({
@@ -9,15 +12,37 @@ initLogger({
 	},
 });
 
-const app = new Hono<EvlogVariables>();
+const hono = Effect.gen(function* () {
+	const honoApp = yield* HonoApp;
+	const routeBuilder = yield* RouteBuilder;
 
-app.use(evlog());
+	// Register middleware
+	yield* honoApp.use(evlog());
 
-app.get("/", (c) => {
-	c.get("log").set({ route: "/" });
-	return c.text("Hello Hono!");
+	// Register root route
+	honoApp.app.get("/", (c) => {
+		c.get("log").set({ route: "/" });
+		return c.text("Hello Hono!");
+	});
+
+	// Register sub-routers via the RouteBuilder
+	yield* routeBuilder.routes([
+		{ path: "/users", router: users },
+		{ path: "/repositories", router: repositories },
+	]);
+
+	return honoApp.app;
 });
 
-app.route("/users", users);
+const AppLive = Layer.mergeAll(
+	HonoApp.Default,
+	RouteBuilder.Default,
+);
+
+const app = Effect.runSync(
+	hono.pipe(
+		Effect.provide(AppLive),
+	),
+);
 
 export default app;
