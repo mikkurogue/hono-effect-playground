@@ -3,8 +3,8 @@ import { evlog } from "evlog/hono";
 import { Effect, Layer } from "effect";
 import { HonoApp } from "./lib/hono-app";
 import { RouteBuilder } from "./lib/route-builder";
-import { repositories } from "./repositories";
-import { users } from "./users";
+import { repositoriesModule } from "./repositories";
+import { usersModule } from "./users";
 
 initLogger({
 	env: {
@@ -15,6 +15,9 @@ initLogger({
 const hono = Effect.gen(function* () {
 	const honoApp = yield* HonoApp;
 	const routeBuilder = yield* RouteBuilder;
+
+	const users = yield* usersModule;
+	const repositories = yield* repositoriesModule;
 
 	// Register middleware
 	yield* honoApp.use(evlog());
