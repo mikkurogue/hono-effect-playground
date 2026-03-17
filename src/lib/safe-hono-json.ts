@@ -5,51 +5,45 @@ import type { Context as HonoContext } from "hono";
 import type { z } from "zod";
 
 export class JsonParseError extends Data.TaggedError("JsonParseError")<{
-	message: string;
+  message: string;
 }> {}
 
-export class JsonValidationError extends Data.TaggedError(
-	"JsonValidationError",
-)<{
-	message: string;
-	issues: z.core.$ZodIssue[];
+export class JsonValidationError extends Data.TaggedError("JsonValidationError")<{
+  message: string;
+  issues: z.core.$ZodIssue[];
 }> {}
 
 interface HonoJsonParser {
-	readonly safeJson: <T extends z.ZodType>(
-		ctx: HonoContext,
-		schema: T,
-	) => Effect.Effect<z.infer<T>, JsonParseError | JsonValidationError>;
+  readonly safeJson: <T extends z.ZodType>(
+    ctx: HonoContext,
+    schema: T,
+  ) => Effect.Effect<z.infer<T>, JsonParseError | JsonValidationError>;
 }
 
-export class HonoJson extends Context.Tag("HonoJson")<
-	HonoJson,
-	HonoJsonParser
->() {}
+export class HonoJson extends Context.Tag("HonoJson")<HonoJson, HonoJsonParser>() {}
 
 export const HonoJsonLive = Layer.succeed(HonoJson, {
-	safeJson: <T extends z.ZodType>(ctx: HonoContext, schema: T) =>
-		Effect.gen(function* () {
-			const body = yield* Effect.tryPromise({
-				try: () => ctx.req.json(),
-				catch: (e) =>
-					new JsonParseError({
-						message:
-							e instanceof Error ? e.message : "Failed to parse JSON body",
-					}),
-			});
+  safeJson: <T extends z.ZodType>(ctx: HonoContext, schema: T) =>
+    Effect.gen(function* () {
+      const body = yield* Effect.tryPromise({
+        try: () => ctx.req.json(),
+        catch: (e) =>
+          new JsonParseError({
+            message: e instanceof Error ? e.message : "Failed to parse JSON body",
+          }),
+      });
 
-			const validation = schema.safeParse(body);
+      const validation = schema.safeParse(body);
 
-			if (!validation.success) {
-				return yield* Effect.fail(
-					new JsonValidationError({
-						message: "Validation failed",
-						issues: validation.error.issues,
-					}),
-				);
-			}
+      if (!validation.success) {
+        return yield* Effect.fail(
+          new JsonValidationError({
+            message: "Validation failed",
+            issues: validation.error.issues,
+          }),
+        );
+      }
 
-			return validation.data as z.infer<T>;
-		}),
+      return validation.data as z.infer<T>;
+    }),
 });

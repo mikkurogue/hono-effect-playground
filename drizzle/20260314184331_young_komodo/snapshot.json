@@ -2,9 +2,7 @@
   "version": "8",
   "dialect": "postgres",
   "id": "69e91897-5637-4968-bc64-5aec2b53942e",
-  "prevIds": [
-    "00000000-0000-0000-0000-000000000000"
-  ],
+  "prevIds": ["00000000-0000-0000-0000-000000000000"],
   "ddl": [
     {
       "isRlsEnabled": false,
@@ -111,14 +109,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "owner"
-      ],
+      "columns": ["owner"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "repositories_owner_users_id_fkey",
@@ -127,9 +121,7 @@
       "table": "repositories"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "repositories_pkey",
       "schema": "public",
@@ -137,9 +129,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "users_pkey",
       "schema": "public",
@@ -148,9 +138,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "username"
-      ],
+      "columns": ["username"],
       "nullsNotDistinct": false,
       "name": "users_username_key",
       "schema": "public",
@@ -159,9 +147,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "email"
-      ],
+      "columns": ["email"],
       "nullsNotDistinct": false,
       "name": "users_email_key",
       "schema": "public",

@@ -4,9 +4,9 @@ services:
     container_name: hono-api-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: hono_api 
-      POSTGRES_PASSWORD: hono_api_password 
-      POSTGRES_DB: hono_api 
+      POSTGRES_USER: hono_api
+      POSTGRES_PASSWORD: hono_api_password
+      POSTGRES_DB: hono_api
     ports:
       - "5433:5432"
     volumes:

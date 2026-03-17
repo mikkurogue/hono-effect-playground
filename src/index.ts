@@ -7,45 +7,38 @@ import { repositoriesModule } from "./repositories";
 import { usersModule } from "./users";
 
 initLogger({
-	env: {
-		service: "my-api",
-	},
+  env: {
+    service: "my-api",
+  },
 });
 
 const hono = Effect.gen(function* () {
-	const honoApp = yield* HonoApp;
-	const routeBuilder = yield* RouteBuilder;
+  const honoApp = yield* HonoApp;
+  const routeBuilder = yield* RouteBuilder;
 
-	const users = yield* usersModule;
-	const repositories = yield* repositoriesModule;
+  const users = yield* usersModule;
+  const repositories = yield* repositoriesModule;
 
-	// Register middleware
-	yield* honoApp.use(evlog());
+  // Register middleware
+  yield* honoApp.use(evlog());
 
-	// Register root route
-	honoApp.app.get("/", (c) => {
-		c.get("log").set({ route: "/" });
-		return c.text("Hello Hono!");
-	});
+  // Register root route
+  honoApp.app.get("/", (c) => {
+    c.get("log").set({ route: "/" });
+    return c.text("Hello Hono!");
+  });
 
-	// Register sub-routers via the RouteBuilder
-	yield* routeBuilder.routes([
-		{ path: "/users", router: users },
-		{ path: "/repositories", router: repositories },
-	]);
+  // Register sub-routers via the RouteBuilder
+  yield* routeBuilder.routes([
+    { path: "/users", router: users },
+    { path: "/repositories", router: repositories },
+  ]);
 
-	return honoApp.app;
+  return honoApp.app;
 });
 
-const AppLive = Layer.mergeAll(
-	HonoApp.Default,
-	RouteBuilder.Default,
-);
+const AppLive = Layer.mergeAll(HonoApp.Default, RouteBuilder.Default);
 
-const app = Effect.runSync(
-	hono.pipe(
-		Effect.provide(AppLive),
-	),
-);
+const app = Effect.runSync(hono.pipe(Effect.provide(AppLive)));
 
 export default app;
