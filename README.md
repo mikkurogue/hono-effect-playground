@@ -11,3 +11,12 @@ bun run dev
 ```
 
 open http://localhost:3000
+
+
+To view Scalar docs:
+
+```sh
+bun run dev
+```
+
+open http://localhost:3000/scalar
