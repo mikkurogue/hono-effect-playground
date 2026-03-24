@@ -1,10 +1,11 @@
 import { zValidator } from "../lib/z-param-validator";
-import * as Effect from "effect/Effect";
+import Effect from "effect/Effect";
 import type { EvlogVariables } from "evlog/hono";
 import type { Hono } from "hono";
-import * as z from "zod";
+import z from "zod";
 import { DbLive } from "../db";
 import { createHonoModule } from "../lib/hono-module";
+import { mapServiceErrors } from "../lib/map-service-errors";
 import {
   bulkDeleteRepositories,
   createRepository,
@@ -28,31 +29,11 @@ export const repositoriesModule: Effect.Effect<Hono<EvlogVariables>> = Effect.ge
     const filter = ctx.req.valid("json");
 
     const result = await Effect.runPromise(
-      getRepositories(filter).pipe(
-        Effect.provide(DbLive),
-        Effect.map((value) => ({ ok: true as const, value })),
-        Effect.catchTags({
-          RepositoryValidationError: (error) => {
-            log.error(`Repository response validation failed: ${error.message}`);
-            return Effect.succeed({
-              ok: false as const,
-              status: 500 as const,
-              error: "Invalid repository data in database",
-            });
-          },
-          RepositoryDatabaseError: (error) => {
-            log.error(`Database error while listing repositories: ${error.message}`);
-            return Effect.succeed({
-              ok: false as const,
-              status: 500 as const,
-              error: "Database error",
-            });
-          },
-        }),
-      ),
+      getRepositories(filter).pipe(Effect.provide(DbLive), mapServiceErrors),
     );
 
     if (!result.ok) {
+      log.error(`Failed to list repositories: ${result.error}`);
       return ctx.json({ error: result.error }, result.status);
     }
 
@@ -66,39 +47,11 @@ export const repositoriesModule: Effect.Effect<Hono<EvlogVariables>> = Effect.ge
     const { id } = ctx.req.valid("param");
 
     const result = await Effect.runPromise(
-      getRepositoryById(id).pipe(
-        Effect.provide(DbLive),
-        Effect.map((value) => ({ ok: true as const, value })),
-        Effect.catchTags({
-          RepositoryNotFoundError: () => {
-            log.error(`Repository with id ${id} not found`);
-            return Effect.succeed({
-              ok: false as const,
-              status: 404 as const,
-              error: "Repository not found",
-            });
-          },
-          RepositoryValidationError: (error) => {
-            log.error(`Repository response validation failed: ${error.message}`);
-            return Effect.succeed({
-              ok: false as const,
-              status: 500 as const,
-              error: "Invalid repository data in database",
-            });
-          },
-          RepositoryDatabaseError: (error) => {
-            log.error(`Database error while fetching repository: ${error.message}`);
-            return Effect.succeed({
-              ok: false as const,
-              status: 500 as const,
-              error: "Database error",
-            });
-          },
-        }),
-      ),
+      getRepositoryById(id).pipe(Effect.provide(DbLive), mapServiceErrors),
     );
 
     if (!result.ok) {
+      log.error(`Failed to get repository ${id}: ${result.error}`);
       return ctx.json({ error: result.error }, result.status);
     }
 
@@ -112,32 +65,7 @@ export const repositoriesModule: Effect.Effect<Hono<EvlogVariables>> = Effect.ge
     const body = ctx.req.valid("json");
 
     const result = await Effect.runPromise(
-      createRepository(body).pipe(
-        Effect.provide(DbLive),
-        Effect.map((value) => ({ ok: true as const, value })),
-        Effect.catchTags({
-          RepositoryOwnerNotFoundError: (error) => {
-            log.error(`Owner with id ${error.owner} not found`);
-            return Effect.succeed({
-              ok: false as const,
-              status: 404 as const,
-              error: "Owner not found",
-            });
-          },
-          RepositoryValidationError: (error) =>
-            Effect.succeed({
-              ok: false as const,
-              status: 400 as const,
-              error: error.message,
-            }),
-          RepositoryDatabaseError: (error) =>
-            Effect.succeed({
-              ok: false as const,
-              status: 500 as const,
-              error: error.message,
-            }),
-        }),
-      ),
+      createRepository(body).pipe(Effect.provide(DbLive), mapServiceErrors),
     );
 
     if (!result.ok) {
@@ -160,19 +88,13 @@ export const repositoriesModule: Effect.Effect<Hono<EvlogVariables>> = Effect.ge
 
     const body = ctx.req.valid("json");
 
-    const deleted = await Effect.runPromise(
-      bulkDeleteRepositories(body.ids).pipe(
-        Effect.provide(DbLive),
-        Effect.as(true),
-        Effect.catchTags({
-          RepositoriesNotFoundError: () => Effect.succeed(false),
-        }),
-      ),
+    const result = await Effect.runPromise(
+      bulkDeleteRepositories(body.ids).pipe(Effect.provide(DbLive), mapServiceErrors),
     );
 
-    if (!deleted) {
-      log.error("No repositories found for provided ids");
-      return ctx.json({ error: "Repositories not found" }, 404);
+    if (!result.ok) {
+      log.error(`Bulk delete repositories failed: ${result.error}`);
+      return ctx.json({ error: result.error }, result.status);
     }
 
     return ctx.body(null, 204);
@@ -184,19 +106,13 @@ export const repositoriesModule: Effect.Effect<Hono<EvlogVariables>> = Effect.ge
 
     const params = ctx.req.valid("param");
 
-    const deleted = await Effect.runPromise(
-      deleteRepositoryById(params.id).pipe(
-        Effect.provide(DbLive),
-        Effect.as(true),
-        Effect.catchTags({
-          RepositoryNotFoundError: () => Effect.succeed(false),
-        }),
-      ),
+    const result = await Effect.runPromise(
+      deleteRepositoryById(params.id).pipe(Effect.provide(DbLive), mapServiceErrors),
     );
 
-    if (!deleted) {
-      log.error(`Repository with id ${params.id} not found`);
-      return ctx.json({ error: "Repository not found" }, 404);
+    if (!result.ok) {
+      log.error(`Delete repository ${params.id} failed: ${result.error}`);
+      return ctx.json({ error: result.error }, result.status);
     }
 
     return ctx.body(null, 204);

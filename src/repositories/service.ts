@@ -2,15 +2,13 @@ import { type SQL, and, eq, ilike, inArray } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as z from "zod";
 import { Db } from "../db";
+import { RelationNotFoundError } from "../lib/errors";
+import { assertAnyFound, assertFound, validate } from "../lib/service-helpers";
+import { withDbError } from "../lib/with-db-error";
 import { repositoriesTable, usersTable } from "../schema";
-import {
-  RepositoriesNotFoundError,
-  RepositoryDatabaseError,
-  RepositoryNotFoundError,
-  RepositoryOwnerNotFoundError,
-  RepositoryValidationError,
-} from "./errors";
 import { RepositoryFilter, repositoryResponseSchema, CreateRepositoryInput } from "./schema";
+
+const entity = "Repository";
 
 export function getRepositories(filter?: RepositoryFilter) {
   return Effect.gen(function* () {
@@ -28,45 +26,20 @@ export function getRepositories(filter?: RepositoryFilter) {
     const repositories =
       conditions.length > 0 ? yield* query.where(and(...conditions)) : yield* query;
 
-    const parsed = z.array(repositoryResponseSchema).safeParse(repositories);
-    if (!parsed.success) {
-      return yield* Effect.fail(new RepositoryValidationError({ message: parsed.error.message }));
-    }
-
-    return parsed.data;
-  }).pipe(
-    Effect.catchTags({
-      EffectDrizzleQueryError: (error) =>
-        Effect.fail(new RepositoryDatabaseError({ message: error.message })),
-    }),
-  );
+    return yield* validate(entity, z.array(repositoryResponseSchema), repositories);
+  }).pipe(withDbError(entity));
 }
 
 export function getRepositoryById(id: string) {
   return Effect.gen(function* () {
     const db = yield* Db;
-
     const [repository] = yield* db
       .select()
       .from(repositoriesTable)
       .where(eq(repositoriesTable.id, id));
-
-    if (!repository) {
-      return yield* Effect.fail(new RepositoryNotFoundError({ id }));
-    }
-
-    const parsed = repositoryResponseSchema.safeParse(repository);
-    if (!parsed.success) {
-      return yield* Effect.fail(new RepositoryValidationError({ message: parsed.error.message }));
-    }
-
-    return parsed.data;
-  }).pipe(
-    Effect.catchTags({
-      EffectDrizzleQueryError: (error) =>
-        Effect.fail(new RepositoryDatabaseError({ message: error.message })),
-    }),
-  );
+    const found = yield* assertFound(entity, id, repository);
+    return yield* validate(entity, repositoryResponseSchema, found);
+  }).pipe(withDbError(entity));
 }
 
 export function createRepository(input: CreateRepositoryInput) {
@@ -80,61 +53,34 @@ export function createRepository(input: CreateRepositoryInput) {
       .where(eq(usersTable.id, input.owner));
 
     if (!owner) {
-      return yield* Effect.fail(new RepositoryOwnerNotFoundError({ owner: input.owner }));
+      return yield* Effect.fail(
+        new RelationNotFoundError({ entity, relation: "Owner", id: input.owner }),
+      );
     }
 
     const [created] = yield* db.insert(repositoriesTable).values(input).returning();
-
-    const parsed = repositoryResponseSchema.safeParse(created);
-    if (!parsed.success) {
-      return yield* Effect.fail(new RepositoryValidationError({ message: parsed.error.message }));
-    }
-
-    return parsed.data;
-  }).pipe(
-    Effect.catchTags({
-      EffectDrizzleQueryError: (error) =>
-        Effect.fail(new RepositoryDatabaseError({ message: error.message })),
-    }),
-  );
+    return yield* validate(entity, repositoryResponseSchema, created);
+  }).pipe(withDbError(entity));
 }
 
 export function deleteRepositoryById(id: string) {
   return Effect.gen(function* () {
     const db = yield* Db;
-
     const result = yield* db
       .delete(repositoriesTable)
       .where(eq(repositoriesTable.id, id))
       .returning();
-
-    if (result.length === 0) {
-      return yield* Effect.fail(new RepositoryNotFoundError({ id }));
-    }
-  }).pipe(
-    Effect.catchTags({
-      EffectDrizzleQueryError: (error) =>
-        Effect.fail(new RepositoryDatabaseError({ message: error.message })),
-    }),
-  );
+    yield* assertFound(entity, id, result[0]);
+  }).pipe(withDbError(entity));
 }
 
 export function bulkDeleteRepositories(ids: string[]) {
   return Effect.gen(function* () {
     const db = yield* Db;
-
     const result = yield* db
       .delete(repositoriesTable)
       .where(inArray(repositoriesTable.id, ids))
       .returning();
-
-    if (result.length === 0) {
-      return yield* Effect.fail(new RepositoriesNotFoundError());
-    }
-  }).pipe(
-    Effect.catchTags({
-      EffectDrizzleQueryError: (error) =>
-        Effect.fail(new RepositoryDatabaseError({ message: error.message })),
-    }),
-  );
+    yield* assertAnyFound(entity, result);
+  }).pipe(withDbError(entity));
 }

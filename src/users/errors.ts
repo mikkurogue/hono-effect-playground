@@ -1,17 +1,7 @@
-import { Data } from "effect";
-
-export class UserNotFoundError extends Data.TaggedError("UserNotFoundError")<{
-  id: string;
-}> {}
-
-export class UsersNotFoundError extends Data.TaggedError("UsersNotFoundError")<{}> {}
-
-export class UserAlreadyExistsError extends Data.TaggedError("UserAlreadyExistsError")<{}> {}
-
-export class UserValidationError extends Data.TaggedError("UserValidationError")<{
-  message: string;
-}> {}
-
-export class UserDatabaseError extends Data.TaggedError("UserDatabaseError")<{
-  message: string;
-}> {}
+export {
+  AlreadyExistsError as UserAlreadyExistsError,
+  DatabaseError as UserDatabaseError,
+  EntitiesNotFoundError as UsersNotFoundError,
+  NotFoundError as UserNotFoundError,
+  ValidationError as UserValidationError,
+} from "../lib/errors";

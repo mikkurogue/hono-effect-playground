@@ -1,10 +1,11 @@
 import { zValidator } from "../lib/z-param-validator";
-import * as Effect from "effect/Effect";
+import Effect from "effect/Effect";
 import type { EvlogVariables } from "evlog/hono";
 import type { Context, Hono } from "hono";
-import * as z from "zod";
+import z from "zod";
 import { DbLive } from "../db";
 import { createHonoModule } from "../lib/hono-module";
+import { mapServiceErrors } from "../lib/map-service-errors";
 import { bulkDeleteUsers, createUser, deleteUserById, getUserById, getUsers } from "./service";
 import { createUserSchema, bulkDeleteUsersSchema } from "./schema";
 
@@ -15,36 +16,16 @@ export const usersModule: Effect.Effect<Hono<EvlogVariables>> = Effect.gen(funct
     const log = ctx.get("log");
     log.set({ route: "/users" });
 
-    const users = await Effect.runPromise(
-      getUsers().pipe(
-        Effect.provide(DbLive),
-        Effect.map((value) => ({ ok: true as const, value })),
-        Effect.catchTags({
-          UserValidationError: (error) => {
-            log.error(`User response validation failed: ${error.message}`);
-            return Effect.succeed({
-              ok: false as const,
-              status: 500 as const,
-              error: "Invalid user data in database",
-            });
-          },
-          UserDatabaseError: (error) => {
-            log.error(`Database error while listing users: ${error.message}`);
-            return Effect.succeed({
-              ok: false as const,
-              status: 500 as const,
-              error: "Database error",
-            });
-          },
-        }),
-      ),
+    const result = await Effect.runPromise(
+      getUsers().pipe(Effect.provide(DbLive), mapServiceErrors),
     );
 
-    if (!users.ok) {
-      return ctx.json({ error: users.error }, users.status);
+    if (!result.ok) {
+      log.error(`Failed to list users: ${result.error}`);
+      return ctx.json({ error: result.error }, result.status);
     }
 
-    return ctx.json(users.value);
+    return ctx.json(result.value);
   });
 
   yield* app.get("/:id", zValidator("param", z.object({ id: z.uuid() })), async (ctx) => {
@@ -53,44 +34,16 @@ export const usersModule: Effect.Effect<Hono<EvlogVariables>> = Effect.gen(funct
 
     const { id } = ctx.req.valid("param");
 
-    const user = await Effect.runPromise(
-      getUserById(id).pipe(
-        Effect.provide(DbLive),
-        Effect.map((value) => ({ ok: true as const, value })),
-        Effect.catchTags({
-          UserNotFoundError: () => {
-            log.error(`User with id ${id} not found`);
-            return Effect.succeed({
-              ok: false as const,
-              status: 404 as const,
-              error: "User not found",
-            });
-          },
-          UserValidationError: (error) => {
-            log.error(`User response validation failed: ${error.message}`);
-            return Effect.succeed({
-              ok: false as const,
-              status: 500 as const,
-              error: "Invalid user data in database",
-            });
-          },
-          UserDatabaseError: (error) => {
-            log.error(`Database error while fetching user: ${error.message}`);
-            return Effect.succeed({
-              ok: false as const,
-              status: 500 as const,
-              error: "Database error",
-            });
-          },
-        }),
-      ),
+    const result = await Effect.runPromise(
+      getUserById(id).pipe(Effect.provide(DbLive), mapServiceErrors),
     );
 
-    if (!user.ok) {
-      return ctx.json({ error: user.error }, user.status);
+    if (!result.ok) {
+      log.error(`Failed to get user ${id}: ${result.error}`);
+      return ctx.json({ error: result.error }, result.status);
     }
 
-    return ctx.json(user.value);
+    return ctx.json(result.value);
   });
 
   yield* app.post("/", zValidator("json", createUserSchema), async (ctx) => {
@@ -99,42 +52,19 @@ export const usersModule: Effect.Effect<Hono<EvlogVariables>> = Effect.gen(funct
 
     const body = ctx.req.valid("json");
 
-    const createdUser = await Effect.runPromise(
-      createUser(body).pipe(
-        Effect.provide(DbLive),
-        Effect.map((value) => ({ ok: true as const, value })),
-        Effect.catchTags({
-          UserAlreadyExistsError: () =>
-            Effect.succeed({
-              ok: false as const,
-              status: 409 as const,
-              error: "User already exists",
-            }),
-          UserValidationError: (error) =>
-            Effect.succeed({
-              ok: false as const,
-              status: 400 as const,
-              error: error.message,
-            }),
-          UserDatabaseError: (error) =>
-            Effect.succeed({
-              ok: false as const,
-              status: 500 as const,
-              error: error.message,
-            }),
-        }),
-      ),
+    const result = await Effect.runPromise(
+      createUser(body).pipe(Effect.provide(DbLive), mapServiceErrors),
     );
 
-    if (!createdUser.ok) {
-      log.error(`User creation failed: ${createdUser.error}`);
-      return ctx.json({ error: createdUser.error }, createdUser.status);
+    if (!result.ok) {
+      log.error(`User creation failed: ${result.error}`);
+      return ctx.json({ error: result.error }, result.status);
     }
 
     return ctx.json(
       {
         message: "User created successfully",
-        user: createdUser.value,
+        user: result.value,
       },
       201,
     );
@@ -146,19 +76,13 @@ export const usersModule: Effect.Effect<Hono<EvlogVariables>> = Effect.gen(funct
 
     const body = ctx.req.valid("json");
 
-    const deleted = await Effect.runPromise(
-      bulkDeleteUsers(body.ids).pipe(
-        Effect.provide(DbLive),
-        Effect.as(true),
-        Effect.catchTags({
-          UsersNotFoundError: () => Effect.succeed(false),
-        }),
-      ),
+    const result = await Effect.runPromise(
+      bulkDeleteUsers(body.ids).pipe(Effect.provide(DbLive), mapServiceErrors),
     );
 
-    if (!deleted) {
-      log.error("No users found for provided ids");
-      return ctx.json({ error: "Users not found" }, 404);
+    if (!result.ok) {
+      log.error(`Bulk delete users failed: ${result.error}`);
+      return ctx.json({ error: result.error }, result.status);
     }
 
     return ctx.body(null, 204);
@@ -170,19 +94,13 @@ export const usersModule: Effect.Effect<Hono<EvlogVariables>> = Effect.gen(funct
 
     const params = ctx.req.valid("param");
 
-    const deleted = await Effect.runPromise(
-      deleteUserById(params.id).pipe(
-        Effect.provide(DbLive),
-        Effect.as(true),
-        Effect.catchTags({
-          UserNotFoundError: () => Effect.succeed(false),
-        }),
-      ),
+    const result = await Effect.runPromise(
+      deleteUserById(params.id).pipe(Effect.provide(DbLive), mapServiceErrors),
     );
 
-    if (!deleted) {
-      log.error(`User with id ${params.id} not found`);
-      return ctx.json({ error: "User not found" }, 404);
+    if (!result.ok) {
+      log.error(`Delete user ${params.id} failed: ${result.error}`);
+      return ctx.json({ error: result.error }, result.status);
     }
 
     return ctx.body(null, 204);
