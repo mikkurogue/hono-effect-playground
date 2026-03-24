@@ -35,7 +35,12 @@ export const apiSpec: OpenAPIV3.Document = {
               },
             },
           },
-          "500": { description: "Server error", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
         },
       },
       post: {
@@ -63,9 +68,24 @@ export const apiSpec: OpenAPIV3.Document = {
               },
             },
           },
-          "400": { description: "Validation error", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
-          "409": { description: "User already exists", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
-          "500": { description: "Server error", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          "400": {
+            description: "Validation error",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
+          "409": {
+            description: "User already exists",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
         },
       },
     },
@@ -75,24 +95,45 @@ export const apiSpec: OpenAPIV3.Document = {
         summary: "Get a user by ID",
         operationId: "getUserById",
         tags: ["Users"],
-        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
         responses: {
           "200": {
             description: "The user",
-            content: { "application/json": { schema: { $ref: "#/components/schemas/UserResponse" } } },
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/UserResponse" } },
+            },
           },
-          "404": { description: "User not found", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
-          "500": { description: "Server error", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          "404": {
+            description: "User not found",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
         },
       },
       delete: {
         summary: "Delete a user by ID",
         operationId: "deleteUserById",
         tags: ["Users"],
-        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
         responses: {
           "204": { description: "User deleted" },
-          "404": { description: "User not found", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          "404": {
+            description: "User not found",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
         },
       },
     },
@@ -112,7 +153,12 @@ export const apiSpec: OpenAPIV3.Document = {
         },
         responses: {
           "204": { description: "Users deleted" },
-          "404": { description: "Users not found", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          "404": {
+            description: "Users not found",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
         },
       },
     },
@@ -132,11 +178,19 @@ export const apiSpec: OpenAPIV3.Document = {
             description: "Matching repositories",
             content: {
               "application/json": {
-                schema: { type: "array", items: { $ref: "#/components/schemas/RepositoryResponse" } },
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/RepositoryResponse" },
+                },
               },
             },
           },
-          "500": { description: "Server error", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
         },
       },
     },
@@ -166,9 +220,24 @@ export const apiSpec: OpenAPIV3.Document = {
               },
             },
           },
-          "400": { description: "Validation error", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
-          "404": { description: "Owner not found", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
-          "500": { description: "Server error", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          "400": {
+            description: "Validation error",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
+          "404": {
+            description: "Owner not found",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
         },
       },
     },
@@ -178,24 +247,45 @@ export const apiSpec: OpenAPIV3.Document = {
         summary: "Get a repository by ID",
         operationId: "getRepositoryById",
         tags: ["Repositories"],
-        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
         responses: {
           "200": {
             description: "The repository",
-            content: { "application/json": { schema: { $ref: "#/components/schemas/RepositoryResponse" } } },
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/RepositoryResponse" } },
+            },
           },
-          "404": { description: "Repository not found", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
-          "500": { description: "Server error", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          "404": {
+            description: "Repository not found",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
         },
       },
       delete: {
         summary: "Delete a repository by ID",
         operationId: "deleteRepositoryById",
         tags: ["Repositories"],
-        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
         responses: {
           "204": { description: "Repository deleted" },
-          "404": { description: "Repository not found", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          "404": {
+            description: "Repository not found",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
         },
       },
     },
@@ -215,7 +305,12 @@ export const apiSpec: OpenAPIV3.Document = {
         },
         responses: {
           "204": { description: "Repositories deleted" },
-          "404": { description: "Repositories not found", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          "404": {
+            description: "Repositories not found",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
         },
       },
     },

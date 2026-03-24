@@ -11,8 +11,7 @@ import {
 } from "../../src/lib/errors";
 
 // Helper: run an effect through mapServiceErrors and return the result
-const mapError = (error: any) =>
-  Effect.runSync(mapServiceErrors(Effect.fail(error)));
+const mapError = (error: any) => Effect.runSync(mapServiceErrors(Effect.fail(error)));
 
 describe("mapServiceErrors", () => {
   test("NotFoundError -> 404 with entity name", () => {

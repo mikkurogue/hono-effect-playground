@@ -90,9 +90,7 @@ describe("withDbError", () => {
 
   test("catches SqlError from the underlying SQL layer", () => {
     const error = runFailSync(
-      Effect.fail(new MockSqlError({ message: "connection refused" })).pipe(
-        withDbError("User"),
-      ),
+      Effect.fail(new MockSqlError({ message: "connection refused" })).pipe(withDbError("User")),
     );
 
     expect(error._tag).toBe("DatabaseError");
